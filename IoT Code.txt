@@ -1,0 +1,94 @@
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+#include <DHT.h>
+
+// LCD and sensor initialization
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Set LCD address
+#define DHTPIN 2                    // DHT sensor pin
+#define DHTTYPE DHT11               // DHT sensor type
+#define rainfall A0                 // Rain sensor analog pin
+#define gasSensor A1                // Gas sensor analog pin
+#define buzzer 12                   // Buzzer pin
+
+DHT dht(DHTPIN, DHTTYPE);
+
+int h;                              // Humidity
+int t;                              // Temperature
+int rainValue;                      // Rain sensor value
+int gasValue;                       // Gas sensor value
+int rainThreshold = 10;             // Rain threshold
+int gasThreshold = 300;             // Gas threshold
+
+void setup() {
+    lcd.init();                     // Initialize LCD
+    lcd.backlight();                // Turn on LCD backlight
+    lcd.setCursor(0, 0);
+
+    Serial.begin(9600);             // Initialize serial communication
+    dht.begin();                    // Start DHT sensor
+    pinMode(buzzer, OUTPUT);        // Set buzzer pin as output
+    pinMode(rainfall, INPUT);       // Set rain sensor pin as input
+    pinMode(gasSensor, INPUT);      // Set gas sensor pin as input
+}
+
+void loop() {
+    h = dht.readHumidity();         // Read humidity
+    t = dht.readTemperature();      // Read temperature
+    rainValue = analogRead(rainfall);  // Read rain sensor value
+    gasValue = analogRead(gasSensor); // Read gas sensor value
+
+    if (isnan(h) || isnan(t)) {     // Check for failed DHT sensor readings
+        Serial.println("Failed to read from DHT sensor!");
+        return;
+    }
+
+    Serial.print("Humidity: ");
+    Serial.print(h);
+    Serial.print(" %, Temp: ");
+    Serial.print(t);
+    Serial.println(" °C");
+
+    Serial.print("Rain Level: ");
+    Serial.println(rainValue);
+    Serial.print("Gas Level: ");
+    Serial.println(gasValue);
+
+    rainValue = map(rainValue, 0, 1023, 225, 0); // Map rain value to range
+
+    if (rainValue >= rainThreshold && gasValue >= gasThreshold) {
+        Serial.println("Rain and Gas detected");
+        lcd.clear();
+        lcd.setCursor(0, 1);
+        lcd.print("Rain & Gas Alert!");
+        digitalWrite(buzzer, HIGH);
+    } else if (rainValue >= rainThreshold) {
+        Serial.println("Rain detected");
+        lcd.clear();
+        lcd.setCursor(0, 1);
+        lcd.print(" Rain detected! ");
+        digitalWrite(buzzer, HIGH);
+    } else if (gasValue >= gasThreshold) {
+        Serial.println("Gas detected!");
+        lcd.clear();
+        lcd.setCursor(0, 1);
+        lcd.print(" Gas Alert!      ");
+        digitalWrite(buzzer, HIGH); 
+    } else {
+        lcd.setCursor(0, 1);
+        lcd.print("Humidity: ");
+        lcd.print(h);
+        lcd.print("%      ");  // Add spaces to clear previous text
+        digitalWrite(buzzer, LOW);
+    }
+
+    delay(200);
+
+    lcd.setCursor(0, 0);
+    lcd.print("Temperature: ");
+    lcd.print(t);
+    lcd.print("C      "); // Add spaces to clear previous text
+
+    delay(1000);
+}
