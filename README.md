@@ -2,6 +2,7 @@
 IoT Smart Weather Monitoring and Alerting System
 
 Introduction
+
 The Internet of Things (IoT) Weather Monitoring System using Arduino is a cost-effective and efficient solution designed to measure and monitor environmental parameters in real-time. This project leverages various sensors and Arduino microcontroller technology to collect data on temperature, humidity, rainfall, and air quality. The data is displayed on an LCD, and alerts are provided via a buzzer if thresholds are exceeded. This system can be further enhanced with IoT capabilities, enabling remote monitoring and data analysis for smart agriculture, disaster management, and home automation.
 
 Objectives
